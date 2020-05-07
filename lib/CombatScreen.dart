@@ -7,40 +7,41 @@ import 'package:numberpicker/numberpicker.dart';
 import 'Shelf.dart';
 import 'package:string_similarity/string_similarity.dart';
 
-class EncounterBuilder extends StatefulWidget{
+class CombatScreen extends StatefulWidget{
+
+  List<Creature> returnedCreatures;
+  CombatScreen({Key key, @required this.returnedCreatures}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
-    return _EncounterBuilderState();
+    return _CombatScreenState(returnedCreatures: returnedCreatures);
   }
 }
 
-class _EncounterBuilderState extends State<EncounterBuilder>{
+class _CombatScreenState extends State<CombatScreen>{
+  List<Creature> returnedCreatures;
+  _CombatScreenState({Key key, @required this.returnedCreatures});
+
+
+
   SlidableController slidableController;
-  final SearchBarController<Creature> _searchBarController = SearchBarController();
   bool isReplay = false;
 
-  Future<List<Creature>> searchPosts(String text) async {
-
-    List<Creature> posts = Creature.getAllPosts();
-    posts.sort((a, b) => StringSimilarity.compareTwoStrings(b.getSearchString(), text).compareTo(StringSimilarity.compareTwoStrings(a.getSearchString(), text)));
-    ListVisible=false;
-    return posts;
-  }
-  bool ListVisible = true;
   int numberPicker = 0 ;
   String dropdownValueTest = "One";
   String dropdownValueCR = "1";
   CreatureType dropdownValueType = CreatureType.Player;
 
-  var Types = CreatureType.values;
-  var CR = new List<String>.generate(10, (int index) => index.toString());
-
   final List<CreatureType> selectedTypes = <CreatureType>[];
   final List<String> selectedCR = <String>[];
 
-  final List<Creature> returnedCreatures = <Creature>[];
+  void rotateList(){
+    Creature c = returnedCreatures.elementAt(0);
+    returnedCreatures = returnedCreatures.skip(1).toList();
+    returnedCreatures.add(c);
+
+  }
 
   @protected
   void initState() {
@@ -53,33 +54,20 @@ class _EncounterBuilderState extends State<EncounterBuilder>{
   Widget build(BuildContext context) {
 
     return Scaffold(resizeToAvoidBottomInset : false,
-      body: SafeArea(
-        child:
-        Stack(fit: StackFit.expand,
-            children:<Widget>[
-            SearchBar<Creature>(
-              onSearch: searchPosts,
-              onCancelled: ()=>setState(() {ListVisible=true;}),
-              searchBarController: _searchBarController,
-              emptyWidget: Text("empty"),
-              onItemFound: (Creature post, int index) {
-                return Container(color: Colors.white,child:ListTile(
-                    title: Text(post.Name),
-                    subtitle: Text(post.getTypeString()),
-                    onTap: () {returnedCreatures.add(post);setState(() {});}
-                ));
-              },
-            ),
-             if (ListVisible) Positioned(top:80,width:MediaQuery.of(context).size.width,child: _buildList(context, Axis.vertical)),
-             if (!ListVisible) Positioned(top:80,right: -290, width:MediaQuery.of(context).size.width,child: _buildList(context, Axis.vertical)),
-            Positioned(bottom:0,left:50,child:RaisedButton(
-                child: Text('Roll Initative'),
-                onPressed: () {Navigator.of(context).push( MaterialPageRoute(builder: (context) => InitativeInput(returnedCreatures: returnedCreatures)), );},
-              )
+        body: SafeArea(
+            child:
+            Stack(fit: StackFit.expand,
+                children:<Widget>[
+                  Positioned(top:0,width:MediaQuery.of(context).size.width,child: _buildList(context, Axis.vertical)),
+
+                  Positioned(bottom:0,left:50,child:RaisedButton(
+                    child: Text('Next Turn'),
+                    onPressed: () => setState(() =>{rotateList()},
+                  )
+                  )
+                  )]
             )
-          ]
         )
-      )
     );
 
   }
@@ -107,7 +95,7 @@ class _EncounterBuilderState extends State<EncounterBuilder>{
       direction: direction,
       actionPane: SlidableScrollActionPane(),
       actionExtentRatio: 0.25,
-      child: VerticalListItem(returnedCreatures[index]),
+      child: CombatVerticalListItem(returnedCreatures[index]),
       actions: <Widget>[
         new NumberPicker.integer(
             initialValue: numberPicker,
@@ -121,10 +109,10 @@ class _EncounterBuilderState extends State<EncounterBuilder>{
           onPressed: () => _showSnackBar(context, numberPicker>0?'Healed for '+numberPicker.toString():'Damaged for '+numberPicker.toString()),
         ),
         IconSlideAction(
-            caption: 'Delete',
-            color: Colors.red,
-            icon: Icons.delete,
-            onTap: () => setState(() {returnedCreatures.removeAt(index); _showSnackBar(context,'Creature Deleted');})
+            caption: 'Ref',
+            color: Colors.green,
+            icon: Icons.info,
+            onTap: () {Navigator.push(context, MaterialPageRoute(builder: (context) => InfoScreen(creature: item,)));},
         )
       ],
       secondaryActions: _getSliders(item, context),
@@ -142,12 +130,12 @@ class _EncounterBuilderState extends State<EncounterBuilder>{
           children: <Widget>[
             Text(item.ConsumableActions[i].Name),
             Expanded(child: NumberPicker.integer(
-              highlightSelectedValue: true,
-              initialValue: item.ConsumableActions[i].Value,
-              itemExtent: 25,
-              minValue: -100,
-              maxValue: 100,
-              onChanged: (newValue) => setState(() => item.ConsumableActions[i].Value = newValue))
+                highlightSelectedValue: true,
+                initialValue: item.ConsumableActions[i].Value,
+                itemExtent: 25,
+                minValue: -100,
+                maxValue: 100,
+                onChanged: (newValue) => setState(() => item.ConsumableActions[i].Value = newValue))
             )
           ]
       );
@@ -160,8 +148,8 @@ class _EncounterBuilderState extends State<EncounterBuilder>{
   }
 }
 
-class VerticalListItem extends StatelessWidget {
-  VerticalListItem(this.item);
+class CombatVerticalListItem extends StatelessWidget {
+  CombatVerticalListItem(this.item);
   final Creature item;
 
   @override

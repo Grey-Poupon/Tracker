@@ -2,8 +2,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'Shelf.dart';
 
-// https://github.com/smartnsoft/flappy_search_bar
-
 main() {
   runApp(HomePage());
 }
