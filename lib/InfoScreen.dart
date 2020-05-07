@@ -1,7 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'package:zoomable_image/zoomable_image.dart';
-
+import 'package:photo_view/photo_view.dart';
 import 'Creature.dart';
 
 class InfoScreen extends StatelessWidget {
@@ -21,13 +20,15 @@ class InfoScreen extends StatelessWidget {
 
         body: Center(child: Stack( children: <Widget>[
 
-          ZoomableImage(AssetImage(creature.reference), maxScale: 1.0 , minScale: 2.0,),
-            RaisedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Go back!'),
+            PhotoView(imageProvider: AssetImage(creature.reference)),
+            Positioned(top:0, left:0,
+                child:RaisedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text('Go back!'),
               )
+            )
             ]
           )
         ),
